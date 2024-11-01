@@ -1,18 +1,16 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import domtoimage from 'dom-to-image';
-import denemeimage from "./assets/111.jpeg"
 
-const HtmlToImage = () => {
-  // Kaydetmek istediğimiz elemanın referansı
+const HtmlToImageWithUploadAndBackground = () => {
   const elementRef = useRef(null);
+  const [imageSrc, setImageSrc] = useState(null);
 
-  // Görsel Olarak Kaydetme Fonksiyonu
+  // Görsel Kaydetme Fonksiyonu
   const handleCapture = () => {
     const element = elementRef.current;
 
     domtoimage.toPng(element)
       .then((dataUrl) => {
-        // Data URL'yi indirme işlemi
         const link = document.createElement('a');
         link.href = dataUrl;
         link.download = 'my-image.png';
@@ -23,21 +21,66 @@ const HtmlToImage = () => {
       });
   };
 
-  return (
-    <div className="flex justify-center items-center min-h-screen">
-  {/* Görsel olarak kaydedilecek içerik */}
-  <div ref={elementRef} className="bg-blue-500 text-white p-10 rounded-md text-center">
-    <h1 className="text-3xl">Merhaba, bu bir test görselidir!</h1>
-    <img src={denemeimage} width="400px" />
-    <p>Bu içerik görsel olarak kaydedilecek.</p>
+  // Görsel Dosya Yükleme Fonksiyonu
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file && file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = () => setImageSrc(reader.result);
+      reader.readAsDataURL(file);
+    }
+  };
 
-    {/* Kaydetme Butonu */}
-    <button onClick={handleCapture} className="mt-4 px-4 py-2 bg-green-500 text-white rounded">
-      Görsel Olarak Kaydet
-    </button>
-  </div>
-</div>
+  // Drag-and-Drop İşlemleri
+  const handleDrop = (e) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = () => setImageSrc(reader.result);
+      reader.readAsDataURL(file);
+    }
+  };
+  
+  const handleDragOver = (e) => e.preventDefault();
+
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
+      {/* Görsel Alanı */}
+      <div
+        ref={elementRef}
+        onDrop={handleDrop}
+        onDragOver={handleDragOver}
+        className="bg-gray-300 flex items-center justify-center mb-4"
+        style={{
+          width: '400px',
+          height: '400px',
+          position: 'relative',
+          overflow: 'hidden',
+          borderRadius: '8px',
+        }}
+      >
+        {/* Yüklenen Görsel */}
+        {imageSrc ? (
+          <img
+            src={imageSrc}
+            alt="Yüklenen Görsel"
+            className="max-w-full max-h-full object-contain"
+          />
+        ) : (
+          <p>Görseli buraya sürükleyip bırakın veya yükleyin</p>
+        )}
+      </div>
+
+      {/* Dosya Yükleme Butonu */}
+      <input type="file" accept="image/*" onChange={handleFileChange} className="mb-4" />
+
+      {/* Kaydetme Butonu */}
+      <button onClick={handleCapture} className="px-4 py-2 bg-green-500 text-white rounded">
+        Görsel Olarak Kaydet
+      </button>
+    </div>
   );
 };
 
-export default HtmlToImage;
+export default HtmlToImageWithUploadAndBackground;
